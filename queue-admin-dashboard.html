@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการคิว - จองคิวณัฏฐ์ดวงดู</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button {
+            padding: 12px 30px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .button.success {
+            background: #4caf50;
+        }
+
+        .button.success:hover {
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .button.danger {
+            background: #ff6b6b;
+        }
+
+        .button.danger:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .success-message {
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .info-message {
+            background: #2196F3;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .queue-item {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .queue-item.completed {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+
+        .queue-item.called {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+
+        .queue-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .queue-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .queue-details {
+            font-size: 0.95em;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .queue-details p {
+            margin: 5px 0;
+        }
+
+        .queue-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            min-width: 200px;
+        }
+
+        .queue-actions button {
+            padding: 10px 20px;
+            font-size: 0.9em;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .slip-image {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .slip-image:hover {
+            transform: scale(1.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions button {
+            padding: 10px 20px;
+            font-size: 0.9em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-badge.waiting {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-badge.called {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-badge.completed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .queue-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .queue-actions {
+                width: 100%;
+            }
+
+            .queue-actions button {
+                flex: 1;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 20% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 จัดการคิว</h1>
+            <p>จองคิวณัฏฐ์ดวงดู - แผงควบคุมสำหรับเจ้าของ</p>
+        </header>
+
+        <!-- LOGIN SECTION -->
+        <div id="loginSection" class="card">
+            <h2>🔑 เข้าสู่ระบบจัดการคิว</h2>
+            <p style="margin-bottom: 20px; color: #666;">กรุณาใส่รหัสผ่านเพื่อเข้าจัดการคิว</p>
+            
+            <div class="error-message" id="loginError"></div>
+
+            <div class="form-group">
+                <label for="adminPassword">รหัสผ่าน</label>
+                <input type="password" id="adminPassword" placeholder="ใส่รหัสผ่าน" onkeypress="handleEnter(event)">
+            </div>
+
+            <button class="button" onclick="adminLogin()">เข้าสู่ระบบ</button>
+
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <p style="color: #999; font-size: 0.9em;">💡 ถ้ายังไม่ได้ตั้งรหัสผ่าน ให้ใส่รหัสผ่านใดๆ ก็ได้ ระบบจะบันทึกเป็นรหัสผ่านแรก</p>
+            </div>
+        </div>
+
+        <!-- MAIN INTERFACE -->
+        <div id="mainInterface" style="display: none;">
+            <!-- HEADER ACTIONS -->
+            <div class="header-actions">
+                <button class="button secondary" onclick="refreshQueues()">🔄 รีเฟรช</button>
+                <button class="button secondary" onclick="changePassword()">🔑 เปลี่ยนรหัสผ่าน</button>
+                <button class="button secondary" onclick="logout()">🚪 ออกจากระบบ</button>
+            </div>
+
+            <!-- STATISTICS -->
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalQueues">0</div>
+                    <div class="stat-label">คิวทั้งหมด</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="waitingQueues">0</div>
+                    <div class="stat-label">รอคิว</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="calledQueues">0</div>
+                    <div class="stat-label">เรียกแล้ว</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="completedQueues">0</div>
+                    <div class="stat-label">เสร็จสิ้น</div>
+                </div>
+            </div>
+
+            <!-- MESSAGES -->
+            <div class="success-message" id="successMessage"></div>
+            <div class="error-message" id="errorMessage"></div>
+            <div class="info-message" id="infoMessage"></div>
+
+            <!-- QUEUE LIST -->
+            <div class="card">
+                <h2>📋 รายการคิวปัจจุบัน</h2>
+                <div id="queueList"></div>
+            </div>
+
+            <!-- COMPLETED QUEUES -->
+            <div class="card">
+                <h2>✅ คิวที่เสร็จสิ้น</h2>
+                <div id="completedList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FOR SLIP IMAGE -->
+    <div id="slipModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeSlipModal()">&times;</span>
+            <h2 style="margin-bottom: 20px;">📸 รูปสลิป</h2>
+            <img id="slipImage" class="modal-image" src="" alt="Slip">
+            <button class="button secondary" onclick="closeSlipModal()">ปิด</button>
+        </div>
+    </div>
+
+    <!-- MODAL FOR CHANGE PASSWORD -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeChangePasswordModal()">&times;</span>
+            <h2 style="margin-bottom: 20px;">🔑 เปลี่ยนรหัสผ่าน</h2>
+            
+            <div class="form-group">
+                <label for="oldPassword">รหัสผ่านเก่า</label>
+                <input type="password" id="oldPassword" placeholder="ใส่รหัสผ่านเก่า">
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword">รหัสผ่านใหม่</label>
+                <input type="password" id="newPassword" placeholder="ใส่รหัสผ่านใหม่">
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">ยืนยันรหัสผ่านใหม่</label>
+                <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่านใหม่">
+            </div>
+
+            <button class="button success" onclick="saveNewPassword()">บันทึก</button>
+            <button class="button secondary" style="margin-top: 10px;" onclick="closeChangePasswordModal()">ยกเลิก</button>
+        </div>
+    </div>
+
+    <script>
+        // ============ CONFIGURATION ============
+        const API_BASE_URL = 'http://localhost:3000'; // Change to your backend URL
+        const STORAGE_KEYS = {
+            ADMIN_PASSWORD: 'queue_admin_password',
+            ADMIN_TOKEN: 'queue_admin_token'
+        };
+
+        let isLoggedIn = false;
+        let adminToken = null;
+
+        // ============ INITIALIZATION ============
+        window.addEventListener('load', () => {
+            checkLoginStatus();
+            if (isLoggedIn) {
+                loadQueues();
+                setInterval(loadQueues, 5000); // Auto-refresh every 5 seconds
+            }
+        });
+
+        // ============ LOGIN FUNCTIONS ============
+        function checkLoginStatus() {
+            const savedPassword = localStorage.getItem(STORAGE_KEYS.ADMIN_PASSWORD);
+            if (savedPassword) {
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('mainInterface').style.display = 'none';
+            } else {
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('mainInterface').style.display = 'none';
+            }
+        }
+
+        function adminLogin() {
+            const inputPassword = document.getElementById('adminPassword').value;
+            const savedPassword = localStorage.getItem(STORAGE_KEYS.ADMIN_PASSWORD);
+
+            if (!inputPassword) {
+                showError('loginError', 'กรุณาใส่รหัสผ่าน');
+                return;
+            }
+
+            if (!savedPassword) {
+                // First time - set password
+                localStorage.setItem(STORAGE_KEYS.ADMIN_PASSWORD, inputPassword);
+                localStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, 'admin-token-' + Date.now());
+                isLoggedIn = true;
+                adminToken = localStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
+                showMainInterface();
+                loadQueues();
+            } else if (inputPassword === savedPassword) {
+                // Correct password
+                isLoggedIn = true;
+                adminToken = 'admin-token-' + Date.now();
+                localStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, adminToken);
+                showMainInterface();
+                loadQueues();
+            } else {
+                // Wrong password
+                showError('loginError', 'รหัสผ่านไม่ถูกต้อง');
+            }
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                adminLogin();
+            }
+        }
+
+        function logout() {
+            if (confirm('คุณแน่ใจหรือไม่ที่ต้องการออกจากระบบ?')) {
+                isLoggedIn = false;
+                adminToken = null;
+                localStorage.removeItem(STORAGE_KEYS.ADMIN_TOKEN);
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('mainInterface').style.display = 'none';
+            }
+        }
+
+        function showMainInterface() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainInterface').style.display = 'block';
+        }
+
+        // ============ QUEUE FUNCTIONS ============
+        async function loadQueues() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/queues`);
+                const data = await response.json();
+                const queues = data.queues || [];
+
+                // Separate active and completed queues
+                const activeQueues = queues.filter(q => q.status !== 'completed');
+                const completedQueues = queues.filter(q => q.status === 'completed');
+
+                // Update statistics
+                updateStats(queues);
+
+                // Display active queues
+                displayActiveQueues(activeQueues);
+
+                // Display completed queues
+                displayCompletedQueues(completedQueues);
+            } catch (error) {
+                console.error('Load Queues Error:', error);
+                showError('errorMessage', 'ไม่สามารถโหลดรายการคิวได้');
+            }
+        }
+
+        function updateStats(queues) {
+            const waiting = queues.filter(q => q.status === 'waiting').length;
+            const called = queues.filter(q => q.status === 'called').length;
+            const completed = queues.filter(q => q.status === 'completed').length;
+
+            document.getElementById('totalQueues').textContent = queues.length;
+            document.getElementById('waitingQueues').textContent = waiting;
+            document.getElementById('calledQueues').textContent = called;
+            document.getElementById('completedQueues').textContent = completed;
+        }
+
+        function displayActiveQueues(queues) {
+            const queueList = document.getElementById('queueList');
+
+            if (queues.length === 0) {
+                queueList.innerHTML = '<div class="empty-state">📭 ไม่มีคิวรอ</div>';
+                return;
+            }
+
+            let html = '';
+            queues.forEach(queue => {
+                const statusText = getStatusText(queue.status);
+                const statusClass = queue.status;
+                
+                html += `
+                    <div class="queue-item ${statusClass}">
+                        <div class="queue-info">
+                            <div class="queue-number">ลำดับที่ ${queue.queueNumber}</div>
+                            <div class="queue-details">
+                                <p><strong>👤 ${queue.displayName}</strong></p>
+                                <p>📅 ${new Date(queue.bookingTime).toLocaleString('th-TH')}</p>
+                                ${queue.type === 'phone' ? `<p>⏰ นัดหมาย: ${queue.scheduledDate} ${queue.scheduledTime} (${queue.duration} นาที)</p>` : '<p>📋 ประเภท: พิมพ์</p>'}
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="queue-actions">
+                            ${queue.slipUrl ? `<button class="button secondary" onclick="viewSlip('${API_BASE_URL}${queue.slipUrl}')">📸 ดูสลิป</button>` : ''}
+                            ${queue.status === 'waiting' ? `<button class="button success" onclick="callQueue(${queue.id})">📢 เรียกคิว</button>` : ''}
+                            ${queue.status !== 'completed' ? `<button class="button danger" onclick="completeQueue(${queue.id})">✅ ปิดคิว</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            queueList.innerHTML = html;
+        }
+
+        function displayCompletedQueues(queues) {
+            const completedList = document.getElementById('completedList');
+
+            if (queues.length === 0) {
+                completedList.innerHTML = '<div class="empty-state">📭 ยังไม่มีคิวที่เสร็จสิ้น</div>';
+                return;
+            }
+
+            let html = '';
+            queues.forEach(queue => {
+                html += `
+                    <div class="queue-item completed">
+                        <div class="queue-info">
+                            <div class="queue-number">ลำดับที่ ${queue.queueNumber}</div>
+                            <div class="queue-details">
+                                <p><strong>👤 ${queue.displayName}</strong></p>
+                                <p>📅 ${new Date(queue.bookingTime).toLocaleString('th-TH')}</p>
+                                ${queue.type === 'phone' ? `<p>⏰ นัดหมาย: ${queue.scheduledDate} ${queue.scheduledTime}</p>` : '<p>📋 ประเภท: พิมพ์</p>'}
+                                <span class="status-badge completed">✅ เสร็จสิ้น</span>
+                            </div>
+                        </div>
+                        <div class="queue-actions">
+                            ${queue.slipUrl ? `<button class="button secondary" onclick="viewSlip('${API_BASE_URL}${queue.slipUrl}')">📸 ดูสลิป</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            completedList.innerHTML = html;
+        }
+
+        function getStatusText(status) {
+            const statuses = {
+                'waiting': '⏳ รอคิว',
+                'called': '📢 เรียกแล้ว',
+                'completed': '✅ เสร็จสิ้น'
+            };
+            return statuses[status] || status;
+        }
+
+        // ============ QUEUE ACTIONS ============
+        async function callQueue(queueId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/call-queue/${queueId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to call queue');
+                }
+
+                showSuccess('successMessage', '✓ เรียกคิวสำเร็จ');
+                loadQueues();
+            } catch (error) {
+                showError('errorMessage', 'เกิดข้อผิดพลาด: ' + error.message);
+            }
+        }
+
+        async function completeQueue(queueId) {
+            if (!confirm('คุณแน่ใจหรือไม่ที่ต้องการปิดคิวนี้?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/complete-queue/${queueId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to complete queue');
+                }
+
+                showSuccess('successMessage', '✓ ปิดคิวสำเร็จ');
+                loadQueues();
+            } catch (error) {
+                showError('errorMessage', 'เกิดข้อผิดพลาด: ' + error.message);
+            }
+        }
+
+        function refreshQueues() {
+            loadQueues();
+            showInfo('infoMessage', '🔄 รีเฟรชรายการคิวแล้ว');
+        }
+
+        // ============ SLIP IMAGE MODAL ============
+        function viewSlip(slipUrl) {
+            const modal = document.getElementById('slipModal');
+            const slipImage = document.getElementById('slipImage');
+            slipImage.src = slipUrl;
+            modal.style.display = 'block';
+        }
+
+        function closeSlipModal() {
+            document.getElementById('slipModal').style.display = 'none';
+        }
+
+        // ============ CHANGE PASSWORD ============
+        function changePassword() {
+            document.getElementById('changePasswordModal').style.display = 'block';
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'none';
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+
+        function saveNewPassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const savedPassword = localStorage.getItem(STORAGE_KEYS.ADMIN_PASSWORD);
+
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+
+            if (oldPassword !== savedPassword) {
+                alert('รหัสผ่านเก่าไม่ถูกต้อง');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('รหัสผ่านใหม่ไม่ตรงกัน');
+                return;
+            }
+
+            localStorage.setItem(STORAGE_KEYS.ADMIN_PASSWORD, newPassword);
+            showSuccess('successMessage', '✓ เปลี่ยนรหัสผ่านสำเร็จ');
+            closeChangePasswordModal();
+        }
+
+        // ============ MESSAGE FUNCTIONS ============
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function showInfo(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+
+        // ============ MODAL CLOSE ON OUTSIDE CLICK ============
+        window.onclick = function(event) {
+            const slipModal = document.getElementById('slipModal');
+            const changePasswordModal = document.getElementById('changePasswordModal');
+
+            if (event.target === slipModal) {
+                slipModal.style.display = 'none';
+            }
+            if (event.target === changePasswordModal) {
+                changePasswordModal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
